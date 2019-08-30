@@ -1,0 +1,156 @@
+
+
+** No Need For an Entity anymore **
+
+object Instruction{
+
+    LHS == dtype('i1,i4')    {Value,Look_Up_Table_hash}
+
+    COM == dtype('i1')
+
+    RHS == array of { dtype('i1,i4') }
+
+
+}
+
+** One solution is; for each signal assignment, you keep a LookUp table index in the Instruction to find the 
+   Process_to_Signal_Driver_Hash. Then Access the Driver directly through Process_to_Signal_Driver_Hash_Map **
+
+
+object Process{
+
+    Process_hash == dtype('np.uint8')
+
+    ** Id is not required **
+
+    execution_Context == dtype('i4')
+
+    instructions == array of {Instruction object}
+
+    Look_Up_Table == 2D array of{ dtype('i4') }     (Signal_hash,Driver_has_map_index)
+
+    Tem_Store == dtype('np.uint8')
+
+
+}
+
+** First Parse all the Instructions. Whenever you get a new Signal assignment that has not been visited previously
+   insert that in the Look_Up_Table. And Register for a driver in signal object using Driver Dictionary.
+
+   After all this done. When the Signals start to send the Process_to_Signal_Driver_Hash put it there.
+
+   We can use a temporary Dictionary { key=signal_hash : value: Look_Up_Table_index} in process object to put the obtained 
+   Process_to_Signal_Driver_Hash value quickly **
+
+
+
+
+
+
+
+*** Implement a Signal to Signal Name Hash  Table for getting the Name of the Signal at the Time of Printing ***
+
+object Signal{
+
+    Effective_value == dtype('i1')
+
+    ** Keep a Signal Map for Naming convention **
+
+    ** Hash are no longer needed **
+
+    Signal_hash == dtype('i4')
+
+    Processes == array of { Process object }
+
+    Process_Driver_Hash_Map == { key=hash(Signal_hash,process_hash) : Value=Driver_index }                ** Python Dictionary **
+
+    Driver_head == dtype('i4')
+
+    Driver == 1D array of { dtype('i4,i1')}   {Process__Driver_Hash_Map_index,value}
+
+}
+
+** Create an array of all time Sensitive Processses. Now these will stay at contiguous Memory location.
+   
+   Append them in the Event List accordingly
+
+**
+
+
+object Time{
+
+    value == dtype('i8')
+
+    Delayed_Asiignment == array of { dtype('i1,i4,i1')}        Stores The delayed assignment objects (Id,signal_hash,value,delay)
+
+    Triggered_Process == array of { dtype('i1,i4') }           Stores (Id,process_hash)
+
+    Events=[[0]]
+
+}
+
+
+
+s1 <= s2 and s3 and s4 and s5;
+
+intermediate code
+
+and_tem s4 , s5
+tem_and s3
+tem_and s2
+store_tem s1
+
+
+s1 <= s2 and '1' ;
+
+
+Kernel Object ---
+
+1> time_val
+
+2> For signals, keep a central Directory (1D array), having three fields.
+     
+     (Eff_val,Driving_Head_Index,Driving_Count,Triggering_Process_Start_Index,Triggering_Process_Count)        // dtype =( u1,u2,u1,u2,u1 )
+
+
+3> 1D array of Driving Value.          dtype = u1           (Max Size = 256 * 256)
+
+/* Ask how to resolve multiple delayed assignment for a single Signal */
+
+4> 1D array of Signal Update Event.
+
+    1st place is, Update head, and rest of the the fields stores signal index.                    (Max Size = 256 )
+
+
+5> 1D array of Triggering Process.                                                               (Max Size = 256 * 256 )
+
+6> Instruction Array.
+
+    1D array of Instructions                                                                      (Max Size = 256 * 256 )
+
+7> For Signal Triggered Processes,  keep a central Directory (1D array), having three fields.
+
+    ( Instruction_Start_Index,Instruction_End_Index,Current_Instruction_Index, Triggered_Bit)    // dtype = ( u2,u2,u2,u1)
+
+8> For Time Triggered Process, keep a central central Directory (1D array), having three fields.
+
+    ( Instruction_Start_Index,Instruction_End_Index,Current_Instruction_Index )
+
+9> 1D array of Process Trigger Event.
+
+    1st place is, Trigger head, and rest of the the fiels stores process index.                    (Max Size = 256 )
+
+10> Time_Event_List  
+
+    /* Ask how to implement this. Should we use heap, or should we use list */
+
+11> 1D array of Delayed Assignment Objects.
+
+    (ID = -1 ,Signal_hash,Value)        // dtype = ( i1,u1,u1)
+
+    /* Problem is, How to you inject the proper Signal indices */
+
+
+
+
+

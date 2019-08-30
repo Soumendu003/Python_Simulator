@@ -1,0 +1,95 @@
+
+
+Time object{
+
+    time_value;
+
+    Processes_triggered;
+}
+
+
+Signal object{
+
+    Signal_identifier;
+
+    Value;
+
+    Driver;
+
+    Processes_triggered;
+
+}
+
+Process object{
+
+    triggering_signals;
+
+    instructions_list;
+
+    Execution_context;
+
+    timer;
+
+    Variables;
+
+}
+
+
+The Concurrent statements inside a Architecture body will also be a process triggered by time object.
+
+Cycle(Max_time)
+{
+    Time.value=0;
+
+    Process_list <- Capture_All_Processes();     # Instantiates all the processes
+
+    Signal_list <- Capture_All_Signals();        # Instantiates all the Signals
+
+    Bind_Signal_and_Processes();                 # Binds the Signal and corresponding Triggering processes;
+
+    for(Time.value<Max_time)
+    {
+        Time.value+=1;
+
+        Trigger_All_Process_Sensitive_to_Time(Time,Process_list, Signal_list);
+
+    }
+
+}
+
+
+Trigger_All_Process_Sensitive_to_Time(Process_list, Signal_list)
+{
+   
+    for process in Time.Processes_triggered:
+
+
+        if(procees.timer<0):
+            process.timer+=1;
+        else:
+            Execute_process(process,Signal_list)
+    
+
+    value_change=[]
+
+    for signal in Signal_list:
+        
+        Resolve_signal(signal,value_change);      // after resolving each signal Driver list should be removed
+
+    while(len(value_change)>0){
+
+        for signal in value_change:
+
+            for process in signal.Processes_triggered:
+
+                Execute_process(process,Signal_list);
+        
+        value_change=[]
+
+        for signal in Signal_list:
+            Resolve_signal(signal,value_change); 
+
+    }
+
+    
+}
